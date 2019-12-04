@@ -1,9 +1,9 @@
-BMS 225A Workshop on Reproducible Research and Data Exploration
+#BMS 225A Workshop on Reproducible Research and Data Exploration
 
 GK Fragiadakis
 December 5, 2019
 
-# Motivation
+##  Motivation
 
 The goal of this workshop is to lower the barrier of entry to biological data science, and to instill good practices as we do it. 
 We will cover: 
@@ -13,6 +13,6 @@ We will cover:
 - Data exploration
 - Getting started with different data types
 
-# Version control
+## Version control
 
 In this workshop we will cover an introduction to version control using git on GitHub. 
