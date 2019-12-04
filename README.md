@@ -1,4 +1,4 @@
-#BMS 225A Workshop on Reproducible Research and Data Exploration
+# BMS 225A Workshop on Reproducible Research and Data Exploration
 
 GK Fragiadakis
 December 5, 2019
