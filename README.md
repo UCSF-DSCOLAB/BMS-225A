@@ -16,3 +16,44 @@ We will cover:
 ## Version control
 
 In this workshop we will cover an introduction to version control using git on GitHub. 
+
+### Sample git workflow (your git cheatsheet)
+
+1. Create repo on GitHub
+2. clone repo locally
+    `git clone repo-url`
+3. locally create a branch
+    `git checkout -b branch-name`
+    - to see which branch you're on and what exists: `git branch`
+    - to switch between branches: `git checkout branch-name`
+4. make changes on that branch
+5. Add commits on that branch
+    - `git status` (will show you what files have changes and if they are staged)
+    - `git add file-name` (staging your file)
+    - `git commit -m "commit description"`
+6. push that branch to GitHub: push commits every time you come to a stopping point (at least each day)
+    `git push origin branch-name`
+7. when ready, create pull request on GitHub
+8. review on GitHub
+9. merge branch to master
+10. delete branch
+11. then locally, pull down master
+    `git pull origin master`
+12. delete branch locally
+    `git branch -d branch-name`
+13. Run it back from step 3
+
+**Additional tips**: 
+
+Make a .gitignore file with files to ignore by git:
+- `touch .gitignore`
+- write in the names of files (or like *.pdf) you don't want to have appear
+
+To see changes from the last commit:
+`git diff HEAD`
+
+To un-stage a file:
+`git reset name-of-file`
+
+Making a repository locally instead:
+`git init`
