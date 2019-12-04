@@ -12,3 +12,7 @@ We will cover:
 - Intro to version control
 - Data exploration
 - Getting started with different data types
+
+# Version control
+
+In this workshop we will cover an introduction to version control using git on GitHub. 
