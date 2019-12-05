@@ -16,7 +16,10 @@ We will cover:
 ## Reproducible Research
 
 **Resources:**
+
 - Karl Browman's [Tools for Reproducible Research](http://kbroman.org/Tools4RR/) and [initial steps towards reproducible research](https://kbroman.org/steps2rr/)
+- Git resources: Karl Browman's [GitHub Guide](https://kbroman.org/github_tutorial/) and [GitHub's guides](https://guides.github.com/)
+- R package resources: [Hilary Parker's guide (simplest)](https://hilaryparker.com/2014/04/29/writing-an-r-package-from-scratch/), [Karl Browman's R package primer](https://kbroman.org/pkg_primer/), and [Hadley Wickham's R package Book](http://r-pkgs.had.co.nz/)
 
 **Principles:**
 
@@ -71,6 +74,18 @@ To un-stage a file:
 
 Making a repository locally instead:
 - `git init`
+
+## Exploratory data analysis
+
+**Resources**
+
+- Hadley Wickham's [R for Data Science](https://r4ds.had.co.nz/)
+
+(fill in)
+
+## Resources for getting started with CyTOF and scRNAseq
+
+
 
 
 
