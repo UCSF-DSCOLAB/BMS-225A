@@ -1,0 +1,261 @@
+---
+title: "Seurat example"
+author: "GK Fragiadakis"
+date: "12/4/2019"
+output: html_document
+---
+
+Here is an example of an scRNAseq workflow using Seurat (adapted from Arjun Rao). 
+
+Load the required libraries for the analysis:
+
+```{r}
+
+library(Seurat)
+library(dplyr)  # inline modification of matrices
+library(cowplot)  # Pretty plots
+library(ggplot2)  # Pretty plots
+library(grid)  #  for plotting multiple plots in one frame
+library(gridExtra)  #  for plotting multiple plots in one frame
+library(scales)  # to access break formatting functions
+
+```
+
+Defining a function that parses the results of a 10x VDJ TCR sequencing: 
+
+```{r}
+
+parse_tcr_clonotype <- function(tcr_outs_folder){
+  
+    tcr <- read.csv(paste(tcr_outs_folder,"filtered_contig_annotations.csv", sep=""))
+
+    # Remove the -1 at the end of each barcode.
+    # Subsets so only the first line of each barcode is kept,
+    # as each entry for given barcode will have same clonotype.
+    
+    tcr$barcode <- gsub("-1", "", tcr$barcode)
+    tcr <- tcr[!duplicated(tcr$barcode), ]
+
+    # Only keep the barcode and clonotype columns. 
+    # We'll get additional clonotype info from the clonotype table.
+    
+    tcr <- tcr[,c("barcode", "raw_clonotype_id")]
+    names(tcr)[names(tcr) == "raw_clonotype_id"] <- "clonotype_id"
+
+    # Clonotype-centric info.
+    clono <- read.csv(paste(tcr_outs_folder,"clonotypes.csv", sep=""))
+
+    # Slap the AA sequences onto our original table by clonotype_id.
+    tcr <- merge(tcr, clono[, c("clonotype_id", "cdr3s_aa")])
+
+    # Reorder so barcodes are first column and set them as rownames.
+    tcr <- tcr[, c(2,1,3)]
+    rownames(tcr) <- tcr[,1]
+    tcr[,1] <- NULL
+    colnames(tcr) <- c("TCR:clonotype_id", "TCR:cdr3s_aa")
+    
+    return(tcr)
+    
+    }
+
+```
+
+Defining a function that parses the results of a 10x VDJ IG sequencing: 
+
+```{r}
+
+parse_bcr_clonotype <- function(bcr_outs_folder){
+  
+    bcr <- read.csv(paste(bcr_outs_folder,"filtered_contig_annotations.csv", sep=""))
+
+    # Remove the -1 at the end of each barcode.
+    # Subsets so only the first line of each barcode is kept,
+    # as each entry for given barcode will have same clonotype.
+    
+    bcr$barcode <- gsub("-1", "", bcr$barcode)
+    bcr <- bcr[!duplicated(bcr$barcode), ]
+
+    # Only keep the barcode and clonotype columns. 
+    # We'll get additional clonotype info from the clonotype table.
+    
+    bcr <- bcr[,c("barcode", "raw_clonotype_id")]
+    names(bcr)[names(bcr) == "raw_clonotype_id"] <- "clonotype_id"
+
+    # Clonotype-centric info.
+    clono <- read.csv(paste(bcr_outs_folder,"clonotypes.csv", sep=""))
+
+    # Slap the AA sequences onto our original table by clonotype_id.
+    bcr <- merge(bcr, clono[, c("clonotype_id", "cdr3s_aa")])
+
+    # Reorder so barcodes are first column and set them as rownames.
+    bcr <- bcr[, c(2,1,3)]
+    rownames(bcr) <- bcr[,1]
+    bcr[,1] <- NULL
+    colnames(bcr) <- c("BCR:clonotype_id", "BCR:cdr3s_aa")
+    return(bcr)
+    
+    }
+```
+
+Defining a function that plots the number of recovered cells at different thresholds:
+
+```{r}
+
+plot_par_thresholds <- function(sobj){
+  
+    df <- sobj@meta.data[order(-sobj@meta.data$nCount_RNA),]
+    df$idx <- c(1:nrow(df))
+    
+    p <- ggplot(df, aes(x=idx)) + 
+            geom_line(aes(y=nCount_RNA, color='nCount_RNA')) + 
+            geom_point(aes(y=nFeature_RNA, color='nFeature_RNA')) + 
+            scale_y_continuous(trans='log10', breaks = trans_breaks("log10", function(x) 10^x), labels = trans_format("log10", math_format(10^.x)))  + 
+            scale_x_continuous(trans='log10', breaks = trans_breaks("log10", function(x) 10^x), labels = trans_format("log10", math_format(10^.x))) + 
+            scale_colour_manual("", 
+                                breaks = c("nCount_RNA", "nFeature_RNA"),
+                                values = c("red", "blue"),
+                                labels=c('nUMI', 'nGenes')
+                                )
+    
+        scale_color_discrete(name = "Dose", labels = c('nUMI', 'nFeatures'))
+        
+    x <- data.frame(intercepts=seq(100, 500, by=50))
+    
+    x$cells <- sapply(x$intercepts, function(j) { paste0('nF=', j, ': ', sum(df$nFeature_RNA >= j), ' Cells with ', ceiling(median(df[df$nFeature_RNA >= j, 'nFeature_RNA'])), ' Median genes/cell') })
+    
+    p <- p + geom_hline(data = x, aes(yintercept = intercepts), size=0.2) + geom_text(data=x, aes(x=1, y=intercepts, label=cells), hjust=0, vjust=0, size=2)
+    
+    return(p)
+    
+}
+```
+
+Parse the 10X VDJ TCR and IG sequencing:
+
+```{r}
+
+# Set a seed so results are reproducible
+set.seed(21212)
+data_directory <- "~/Downloads/nextgem/"
+
+bcr <- parse_bcr_clonotype(paste(data_directory, '5prime_BCR/CRC/IPICRC136.T1.scrna.live/', sep = ""))
+tcr <- parse_tcr_clonotype(paste(data_directory, '5prime_TCR/CRC/IPICRC136.T1.scrna.live/', sep = ""))
+
+metadata <- merge(tcr, bcr, by=0, all.x=TRUE, all.y=TRUE)
+rownames(metadata) <- metadata$Row.names
+metadata$Row.names <- NULL
+
+```
+
+Create our Seurat object: 
+
+```{r}
+# make sparse matrix
+sobj <- Read10X(data.dir=paste(data_directory, "5prime_GEX/CRC/IPICRC136.T1.scrna.live/raw_feature_bc_matrix", sep = ""))
+
+# make Seurat object
+# min.features: how many genes a barcode needs to have to be considered a cell
+# min.cells: for a gene to be considered a true gene, how many cells does it need to appear in (3 = industry standard)
+sobj <- CreateSeuratObject(counts = sobj, project = "IPICRC/nextgem", min.cells = 3, min.features = 100, meta.data=metadata)
+
+```
+
+Plot thresholds to determine cutoff and set threshold:
+
+```{r}
+
+p <- plot_par_thresholds(sobj)
+plot(p)
+# need to think about cell size in your sample to think about where you should threshold (300 is a lower limit that he's happy with)
+
+# Filter cells lower than num_genes/cell threshold
+sobj <- subset(sobj, subset = nFeature_RNA >= 300)
+```
+
+ID mitochondiral percentage and cell cycle state:
+
+```{r}
+# store mitochondrial percentage in object meta data
+sobj <- PercentageFeatureSet(sobj, pattern = "^MT-", col.name = "percent.mt")
+
+#Store cell cycle state in the metadata (to be able to see if that's creating an artifact)
+cc_genes <- read.table(paste(data_directory, 'cell_cycle_genes.tsv', sep = ""), sep = '\t', header=T, stringsAsFactors = FALSE)
+sobj <- CellCycleScoring(sobj, s.features = cc_genes[cc_genes$stage=='G1-S', 'HUGO'], g2m.features = cc_genes[cc_genes$stage=='G2-M', 'HUGO'], nbin = 12)
+
+# Filter cells with high mito content (dying/dead cells); can go higher to be more permissive (this is fairly stringent)
+sobj <- subset(sobj, cells = rownames(sobj@meta.data[sobj@meta.data$percent.mt < 10, ]))
+```
+
+Run PCA and UMAP:
+
+```{r warning=FALSE}
+
+# run sctransform (lognormalize, scale and center data + additional mathemagical floof)
+sobj <- SCTransform(sobj, vars.to.regress = c('percent.mt', 'S.Score', 'G2M.Score'), verbose = FALSE)
+
+# Get the Princilpal components for the object
+sobj <- RunPCA(sobj, verbose = FALSE)
+# View the dimensions
+DimPlot(sobj, reduction = 'pca')
+# Verify the confounding vars have been regressed out
+FeaturePlot(sobj, reduction = 'pca', features=c('percent.mt', 'S.Score', 'G2M.Score'))
+
+# Use the PC's to plot the UMAP for the object
+sobj <- RunUMAP(sobj, 
+                 dims = 1:30,  # Num PCs to use
+                 n.neighbors = 30,  # Default. Controls how UMAP balances local (low) versus global (large) structure in the data
+                 min.dist = 0.3,   # Default. Controls the size of the clusters. Should be smaller than spread
+                 spread = 1,  # Default. Controls the inter-cluster distances to some extent. Should be larger than min_dist
+                 a = NULL,  # Default. Can be used with b instead of using min.dist/spread
+                 b = NULL,  # Default. Can be used with a instead of using min.dist/spread
+                 verbose = FALSE)
+
+DimPlot(sobj)  # Default reduction in umap
+# Verify the confounding vars have been regressed out
+FeaturePlot(sobj, features=c('percent.mt', 'S.Score', 'G2M.Score'))
+```
+
+Cluster the data using a neighborhood graph and plot resulting clusters. Color by: 
+
+- cluster number
+- BCR
+- TCR
+- CD4 and CD8
+- CD19
+- CD27
+
+
+```{r}
+
+# Calculate the neighborhood graph
+sobj <- FindNeighbors(sobj, 
+                      dims = 1:30,  # Num PCs to use
+                      k.param = 20,  # k for the knn algorithm
+                      verbose = FALSE)
+# Use the neighborhood graph to cluster the data
+sobj <- FindClusters(sobj, verbose = FALSE, 
+                     algorithm = 1)  # Use Original Louvain. 4 = Leiden
+
+# View the cluters UMAP
+DimPlot(sobj, label = TRUE)
+
+DimPlot(sobj, group.by = 'BCR:clonotype_id') + NoLegend()
+DimPlot(sobj, group.by = 'TCR:clonotype_id') + NoLegend()
+
+#Tcell markers
+FeaturePlot(sobj, features = c('CD4', 'CD8A'))
+#0 is split between cd8 and cd4 (left/right)... need to change clustering parameters
+
+
+#Bcell markers
+FeaturePlot(sobj, features = c('CD19'))
+# 3 is a B-cell
+# 1 is mostly a plasma cell
+
+# In humans, CD27 is a good marker for plasma cells, naive B cells are CD27-, 
+# memory B-cells are CD27+ and plasma cells are CD27++.
+FeaturePlot(sobj, features = 'CD27')
+
+```
+
+
