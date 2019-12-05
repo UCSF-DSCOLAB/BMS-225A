@@ -1,6 +1,6 @@
 # BMS 225A Workshop on Reproducible Research and Data Exploration
 
-GK Fragiadakis
+GK Fragiadakis and the Students of the Workshop!
 December 5, 2019
 
 ##  Motivation
