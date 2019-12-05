@@ -81,9 +81,28 @@ Making a repository locally instead:
 
 - Hadley Wickham's [R for Data Science](https://r4ds.had.co.nz/)
 
-(fill in)
+1. Pre-process and tidy your data
+2. Explore your data using the Transform-Visualize-Model loop
+3. Communicate results
 
 ## Resources for getting started with CyTOF and scRNAseq
+
+**CyTOF resources:**
+
+- data pre-processing (normalization, debarcoding, sample cleanup): [premessa](https://github.com/ParkerICI/premessa)
+- gating tools: [Cytobank](cytobank.org) [CellEngine](https://www.primitybio.com/cellengine.html)
+
+**scRNAseq resources:**
+
+- pre-processing and many analyses in [Seurat vignettes](https://satijalab.org/seurat/vignettes.html)
+- some background reading on [single-cell analysis](https://osca.bioconductor.org/)
+
+## Getting help 
+
+We covered a lot, now its time to try it on your own and to reach out if you have further questions as you're going. 
+
+[Our office hours](https://dscolab.ucsf.edu/training)
+[Our contact info](https://dscolab.ucsf.edu/contact-us)
 
 
 
