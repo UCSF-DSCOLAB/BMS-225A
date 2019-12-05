@@ -18,7 +18,7 @@ We will cover:
 **Resources:**
 - Karl Browman's [Tools for Reproducible Research](http://kbroman.org/Tools4RR/) and [initial steps towards reproducible research](https://kbroman.org/steps2rr/)
 
-Principles:
+**Principles:**
 
 1. Organize your data and code
 2. Everything with a script
