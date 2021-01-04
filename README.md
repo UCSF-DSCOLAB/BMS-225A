@@ -1,7 +1,7 @@
 # BMS 225A Workshop on Reproducible Research and Data Exploration
 
-GK Fragiadakis and the Students of the Workshop!
-December 5, 2019
+GK Fragiadakis and the Students of BMS225A
+January 5th, 2021
 
 ##  Motivation
 
@@ -10,8 +10,7 @@ We will cover:
 
 - Principles of reproducible research
 - Intro to version control
-- Data exploration
-- Getting started with different data types
+- Data exploration and resources 
 
 ## Reproducible Research
 
