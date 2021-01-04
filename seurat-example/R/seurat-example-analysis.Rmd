@@ -12,12 +12,12 @@ Load the required libraries for the analysis:
 ```{r}
 
 library(Seurat)
-library(dplyr)  # inline modification of matrices
-library(cowplot)  # Pretty plots
-library(ggplot2)  # Pretty plots
-library(grid)  #  for plotting multiple plots in one frame
-library(gridExtra)  #  for plotting multiple plots in one frame
-library(scales)  # to access break formatting functions
+library(dplyr)
+library(cowplot)
+library(ggplot2)
+library(grid)
+library(gridExtra)
+library(scales)
 
 ```
 
